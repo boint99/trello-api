@@ -7,3 +7,6 @@ yarn add http-status-codes@^2.3.0
 
 #joi => sử lý dữ liệu phía FE gửi lên BE gọi là validate
 yarn add joi@^17.10.2
+
+# biến môi trường
+yarn add cross-env@^7.0.3
