@@ -1,5 +1,4 @@
 import { StatusCodes } from 'http-status-codes'
-// import ApiError from '~/utils/ApiError'
 import { boardService } from '~/services/boardService'
 
 const createNew = async(req, res, next) => {
@@ -7,8 +6,9 @@ const createNew = async(req, res, next) => {
     // throw new ApiError(StatusCodes.UNPROCESSABLE_ENTITY, 'Test error')
     // console.log('🚀 ~ createNew ~ req.body:', req.body)
 
+    const userId = req.jwtDecoded._id
     // Điều hướng dữ liệu sang tầng service
-    const createdBoard = await boardService.createNew(req.body)
+    const createdBoard = await boardService.createNew(userId, req.body)
 
     // có kết quả thì trả về phía client
     res.status(StatusCodes.CREATED).json(createdBoard)
@@ -20,9 +20,9 @@ const createNew = async(req, res, next) => {
 const getDetails = async(req, res, next) => {
   try {
     const boardId = req.params.id
-
+    const userId = req.jwtDecoded._id
     // Điều hướng dữ liệu sang tầng service
-    const board = await boardService.getDetails(boardId)
+    const board = await boardService.getDetails(userId, boardId)
 
     // có kết quả thì trả về phía client
     res.status(StatusCodes.OK).json(board)
@@ -57,9 +57,24 @@ const moveCardToDifferentColumn = async(req, res, next) => {
     next(error)
   }
 }
+
+
+const getBoards = async(req, res, next) => {
+  try {
+    const userId = req.jwtDecoded._id
+
+    const { page, itemsPerPage } = req.query
+    const result = await boardService.getBoards(userId, page, itemsPerPage)
+
+    res.status(StatusCodes.OK).json(result)
+  } catch (error) {
+    next(error)
+  }
+}
 export const boardController = {
   createNew,
   getDetails,
   update,
-  moveCardToDifferentColumn
+  moveCardToDifferentColumn,
+  getBoards
 }

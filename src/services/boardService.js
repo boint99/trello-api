@@ -5,8 +5,9 @@ import { StatusCodes } from 'http-status-codes'
 import { cloneDeep } from 'lodash'
 import { columnModel } from '~/models/columnModel'
 import { cardModel } from '~/models/cardModel'
+import { DEFAULT_ITEMS_PER_PAGE, DEFAULT_PAGE } from '~/utils/constants'
 
-const createNew = async(reqBody) => {
+const createNew = async(userId, reqBody) => {
   try {
     // xử lý dữ liệu tùy đặc thù dự án
     const newBoard = {
@@ -15,7 +16,7 @@ const createNew = async(reqBody) => {
     }
 
     // Gọi tới tâng model để sử lý bảng ghi newBoard vào trong database
-    const createdBoard = await boardModel.createNew(newBoard)
+    const createdBoard = await boardModel.createNew(userId, newBoard)
 
     // Lấy bản ghi board sau khi gọi (Tùy mục đích dự án mà có cần bước này hay không)
     const getNewBoard = await boardModel.findOneById(createdBoard.insertedId)
@@ -27,21 +28,24 @@ const createNew = async(reqBody) => {
   }
 }
 
-const getDetails = async(boardId) => {
+const getDetails = async(userId, boardId) => {
   try {
 
-    const board = await boardModel.getDetails(boardId)
+    const board = await boardModel.getDetails(userId, boardId)
+    console.log('🚀 ~ getDetails ~ board:', board)
     if (!board) {
       throw new ApiError (StatusCodes.NOT_FOUND, 'Board not found!')
     }
 
     // Tạo ra một cái board mới để xử lý, không ảnh hướng với cái ban đầu
     const resBoard = cloneDeep(board)
+    console.log('🚀 ~ getDetails ~ resBoard:', resBoard)
+
 
     resBoard.columns.forEach(c => {
-      c.cards = resBoard.cards.filter(card => card.columnId.equals(c._id))
-      // c.cards = resBoard.cards.filter(card => card.columnsId.toString() === c._id.toString())
+      c.cards = resBoard.cards?.filter(card => card.columnId.equals(c._id)) || []
     })
+    // c.cards = resBoard.cards.filter(card => card.columnsId.toString() === c._id.toString())
 
     // xóa mảng card ra khỏi board ban đầu
     delete resBoard.cards
@@ -91,9 +95,21 @@ const moveCardToDifferentColumn = async( reqBody) => {
   }
 }
 
+const getBoards = async(userId, page, itemsPerPage) => {
+  try {
+    if (!page) page = DEFAULT_PAGE
+    if (!itemsPerPage) itemsPerPage = DEFAULT_ITEMS_PER_PAGE
+
+    return await boardModel.getBoards(userId, parseInt(page, 10), parseInt(itemsPerPage, 10))
+  } catch (error) {
+    throw error
+  }
+}
+
 export const boardService = {
   createNew,
   getDetails,
   update,
-  moveCardToDifferentColumn
+  moveCardToDifferentColumn,
+  getBoards
 }

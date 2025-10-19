@@ -1,15 +1,29 @@
 import express from 'express'
 import { columnValidation } from '~/validations/columnValidation'
 import { columnController } from '~/controllers/columnController'
+import { authMiddlewares } from '~/middlewares/authMiddlewares'
 
 const Router = express.Router()
 
+// Create a new column
 Router.route('/')
-  .post(columnValidation.createNew, columnController.createNew)
+  .post(
+    authMiddlewares.isAuthorized,
+    columnValidation.createNew,
+    columnController.createNew
+  )
 
+// Update or Delete a column by ID
 Router.route('/:id')
-  .put(columnValidation.update, columnController.update) // update
-  .delete(columnValidation.deleteItem, columnController.deleteItem) // delete
-
+  .put(
+    authMiddlewares.isAuthorized,
+    columnValidation.update,
+    columnController.update
+  )
+  .delete(
+    authMiddlewares.isAuthorized,
+    columnValidation.deleteItem,
+    columnController.deleteItem
+  )
 
 export const columnRoute = Router
